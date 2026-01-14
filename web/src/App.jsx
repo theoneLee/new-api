@@ -46,6 +46,7 @@ import ModelDeploymentPage from './pages/ModelDeployment';
 import Playground from './pages/Playground';
 import OAuth2Callback from './components/auth/OAuth2Callback';
 import PersonalSetting from './components/settings/PersonalSetting';
+import Subscription from './pages/Subscription';
 import Setup from './pages/Setup';
 import SetupCheck from './components/layout/SetupCheck';
 
@@ -251,6 +252,26 @@ function App() {
             <PrivateRoute>
               <Suspense fallback={<Loading></Loading>} key={location.pathname}>
                 <TopUp />
+              </Suspense>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path='/console/subscription'
+          element={
+            <AdminRoute>
+              <Suspense fallback={<Loading></Loading>} key={location.pathname}>
+                <Subscription />
+              </Suspense>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path='/console/personal/subscription'
+          element={
+            <PrivateRoute>
+              <Suspense fallback={<Loading></Loading>} key={location.pathname}>
+                <Subscription />
               </Suspense>
             </PrivateRoute>
           }

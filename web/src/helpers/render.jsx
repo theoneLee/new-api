@@ -74,6 +74,7 @@ import {
   CircleUser,
   Package,
   Server,
+  Sparkles,
 } from 'lucide-react';
 
 // 获取侧边栏Lucide图标组件
@@ -119,6 +120,9 @@ export function getLucideIcon(key, selected = false) {
       return <Server {...commonProps} color={iconColor} />;
     case 'setting':
       return <Settings {...commonProps} color={iconColor} />;
+    case 'subscription':
+    case 'personal_subscription':
+      return <Sparkles {...commonProps} color={iconColor} />;
     default:
       return <CircleUser {...commonProps} color={iconColor} />;
   }
@@ -167,21 +171,21 @@ export const getModelCategories = (() => {
       gemini: {
         label: 'Gemini',
         icon: <Gemini.Color />,
-        filter: (model) => 
-          model.model_name.toLowerCase().includes('gemini') || 
+        filter: (model) =>
+          model.model_name.toLowerCase().includes('gemini') ||
           model.model_name.toLowerCase().includes('gemma') ||
-          model.model_name.toLowerCase().includes('learnlm') || 
+          model.model_name.toLowerCase().includes('learnlm') ||
           model.model_name.toLowerCase().startsWith('embedding-') ||
           model.model_name.toLowerCase().includes('text-embedding-004') ||
-          model.model_name.toLowerCase().includes('imagen-4') || 
-          model.model_name.toLowerCase().includes('veo-') || 
-          model.model_name.toLowerCase().includes('aqa') ,
+          model.model_name.toLowerCase().includes('imagen-4') ||
+          model.model_name.toLowerCase().includes('veo-') ||
+          model.model_name.toLowerCase().includes('aqa'),
       },
       moonshot: {
         label: 'Moonshot',
         icon: <Moonshot />,
-        filter: (model) => 
-          model.model_name.toLowerCase().includes('moonshot') || 
+        filter: (model) =>
+          model.model_name.toLowerCase().includes('moonshot') ||
           model.model_name.toLowerCase().includes('kimi'),
       },
       zhipu: {
@@ -189,8 +193,8 @@ export const getModelCategories = (() => {
         icon: <Zhipu.Color />,
         filter: (model) =>
           model.model_name.toLowerCase().includes('chatglm') ||
-          model.model_name.toLowerCase().includes('glm-') || 
-          model.model_name.toLowerCase().includes('cogview') || 
+          model.model_name.toLowerCase().includes('glm-') ||
+          model.model_name.toLowerCase().includes('cogview') ||
           model.model_name.toLowerCase().includes('cogvideo'),
       },
       qwen: {
@@ -206,8 +210,8 @@ export const getModelCategories = (() => {
       minimax: {
         label: 'MiniMax',
         icon: <Minimax.Color />,
-        filter: (model) => 
-          model.model_name.toLowerCase().includes('abab') || 
+        filter: (model) =>
+          model.model_name.toLowerCase().includes('abab') ||
           model.model_name.toLowerCase().includes('minimax'),
       },
       baidu: {
@@ -233,7 +237,7 @@ export const getModelCategories = (() => {
       cohere: {
         label: 'Cohere',
         icon: <Cohere.Color />,
-        filter: (model) => 
+        filter: (model) =>
           model.model_name.toLowerCase().includes('command') ||
           model.model_name.toLowerCase().includes('c4ai-') ||
           model.model_name.toLowerCase().includes('embed-'),
@@ -256,7 +260,7 @@ export const getModelCategories = (() => {
       mistral: {
         label: 'Mistral AI',
         icon: <Mistral.Color />,
-        filter: (model) => 
+        filter: (model) =>
           model.model_name.toLowerCase().includes('mistral') ||
           model.model_name.toLowerCase().includes('codestral') ||
           model.model_name.toLowerCase().includes('pixtral') ||
@@ -878,7 +882,7 @@ export function renderQuotaNumberWithDigit(num, digits = 2) {
         const s = JSON.parse(statusStr);
         symbol = s?.custom_currency_symbol || symbol;
       }
-    } catch (e) {}
+    } catch (e) { }
     return symbol + num;
   } else {
     return num;
@@ -948,7 +952,7 @@ export function renderQuotaWithAmount(amount) {
         const s = JSON.parse(statusStr);
         symbol = s?.custom_currency_symbol || symbol;
       }
-    } catch (e) {}
+    } catch (e) { }
     return symbol + amount;
   }
   return '$' + amount;
@@ -972,7 +976,7 @@ export function getCurrencyConfig() {
         const s = JSON.parse(statusStr);
         rate = s?.usd_exchange_rate || 7;
       }
-    } catch (e) {}
+    } catch (e) { }
   } else if (quotaDisplayType === 'CUSTOM') {
     try {
       if (statusStr) {
@@ -980,7 +984,7 @@ export function getCurrencyConfig() {
         symbol = s?.custom_currency_symbol || '¤';
         rate = s?.custom_currency_exchange_rate || 1;
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 
   return { symbol, rate, type: quotaDisplayType };
@@ -1016,7 +1020,7 @@ export function renderQuota(quota, digits = 2) {
         const s = JSON.parse(statusStr);
         usdRate = s?.usd_exchange_rate || 1;
       }
-    } catch (e) {}
+    } catch (e) { }
     value = resultUSD * usdRate;
     symbol = '¥';
   } else if (quotaDisplayType === 'CUSTOM') {
@@ -1029,7 +1033,7 @@ export function renderQuota(quota, digits = 2) {
         symbolCustom = s?.custom_currency_symbol || symbolCustom;
         rate = s?.custom_currency_exchange_rate || rate;
       }
-    } catch (e) {}
+    } catch (e) { }
     value = resultUSD * rate;
     symbol = symbolCustom;
   }
@@ -1378,38 +1382,38 @@ export function renderModelPrice(
               const extraServices = [
                 webSearch && webSearchCallCount > 0
                   ? i18next.t(
-                      ' + Web搜索 {{count}}次 / 1K 次 * {{symbol}}{{price}} * {{ratioType}} {{ratio}}',
-                      {
-                        count: webSearchCallCount,
-                        symbol: symbol,
-                        price: (webSearchPrice * rate).toFixed(6),
-                        ratio: groupRatio,
-                        ratioType: ratioLabel,
-                      },
-                    )
+                    ' + Web搜索 {{count}}次 / 1K 次 * {{symbol}}{{price}} * {{ratioType}} {{ratio}}',
+                    {
+                      count: webSearchCallCount,
+                      symbol: symbol,
+                      price: (webSearchPrice * rate).toFixed(6),
+                      ratio: groupRatio,
+                      ratioType: ratioLabel,
+                    },
+                  )
                   : '',
                 fileSearch && fileSearchCallCount > 0
                   ? i18next.t(
-                      ' + 文件搜索 {{count}}次 / 1K 次 * {{symbol}}{{price}} * {{ratioType}} {{ratio}}',
-                      {
-                        count: fileSearchCallCount,
-                        symbol: symbol,
-                        price: (fileSearchPrice * rate).toFixed(6),
-                        ratio: groupRatio,
-                        ratioType: ratioLabel,
-                      },
-                    )
+                    ' + 文件搜索 {{count}}次 / 1K 次 * {{symbol}}{{price}} * {{ratioType}} {{ratio}}',
+                    {
+                      count: fileSearchCallCount,
+                      symbol: symbol,
+                      price: (fileSearchPrice * rate).toFixed(6),
+                      ratio: groupRatio,
+                      ratioType: ratioLabel,
+                    },
+                  )
                   : '',
                 imageGenerationCall && imageGenerationCallPrice > 0
                   ? i18next.t(
-                      ' + 图片生成调用 {{symbol}}{{price}} / 1次 * {{ratioType}} {{ratio}}',
-                      {
-                        symbol: symbol,
-                        price: (imageGenerationCallPrice * rate).toFixed(6),
-                        ratio: groupRatio,
-                        ratioType: ratioLabel,
-                      },
-                    )
+                    ' + 图片生成调用 {{symbol}}{{price}} / 1次 * {{ratioType}} {{ratio}}',
+                    {
+                      symbol: symbol,
+                      price: (imageGenerationCallPrice * rate).toFixed(6),
+                      ratio: groupRatio,
+                      ratioType: ratioLabel,
+                    },
+                  )
                   : '',
               ].join('');
 
@@ -1597,10 +1601,10 @@ export function renderAudioModelPrice(
     let audioPrice =
       (audioInputTokens / 1000000) * inputRatioPrice * audioRatio * groupRatio +
       (audioCompletionTokens / 1000000) *
-        inputRatioPrice *
-        audioRatio *
-        audioCompletionRatio *
-        groupRatio;
+      inputRatioPrice *
+      audioRatio *
+      audioCompletionRatio *
+      groupRatio;
     let price = textPrice + audioPrice;
     return (
       <>
@@ -1666,31 +1670,31 @@ export function renderAudioModelPrice(
           <p>
             {cacheTokens > 0
               ? i18next.t(
-                  '文字提示 {{nonCacheInput}} tokens / 1M tokens * {{symbol}}{{price}} + 缓存 {{cacheInput}} tokens / 1M tokens * {{symbol}}{{cachePrice}} + 文字补全 {{completion}} tokens / 1M tokens * {{symbol}}{{compPrice}} = {{symbol}}{{total}}',
-                  {
-                    nonCacheInput: inputTokens - cacheTokens,
-                    cacheInput: cacheTokens,
-                    symbol: symbol,
-                    cachePrice: (inputRatioPrice * cacheRatio * rate).toFixed(
-                      6,
-                    ),
-                    price: (inputRatioPrice * rate).toFixed(6),
-                    completion: completionTokens,
-                    compPrice: (completionRatioPrice * rate).toFixed(6),
-                    total: (textPrice * rate).toFixed(6),
-                  },
-                )
+                '文字提示 {{nonCacheInput}} tokens / 1M tokens * {{symbol}}{{price}} + 缓存 {{cacheInput}} tokens / 1M tokens * {{symbol}}{{cachePrice}} + 文字补全 {{completion}} tokens / 1M tokens * {{symbol}}{{compPrice}} = {{symbol}}{{total}}',
+                {
+                  nonCacheInput: inputTokens - cacheTokens,
+                  cacheInput: cacheTokens,
+                  symbol: symbol,
+                  cachePrice: (inputRatioPrice * cacheRatio * rate).toFixed(
+                    6,
+                  ),
+                  price: (inputRatioPrice * rate).toFixed(6),
+                  completion: completionTokens,
+                  compPrice: (completionRatioPrice * rate).toFixed(6),
+                  total: (textPrice * rate).toFixed(6),
+                },
+              )
               : i18next.t(
-                  '文字提示 {{input}} tokens / 1M tokens * {{symbol}}{{price}} + 文字补全 {{completion}} tokens / 1M tokens * {{symbol}}{{compPrice}} = {{symbol}}{{total}}',
-                  {
-                    input: inputTokens,
-                    symbol: symbol,
-                    price: (inputRatioPrice * rate).toFixed(6),
-                    completion: completionTokens,
-                    compPrice: (completionRatioPrice * rate).toFixed(6),
-                    total: (textPrice * rate).toFixed(6),
-                  },
-                )}
+                '文字提示 {{input}} tokens / 1M tokens * {{symbol}}{{price}} + 文字补全 {{completion}} tokens / 1M tokens * {{symbol}}{{compPrice}} = {{symbol}}{{total}}',
+                {
+                  input: inputTokens,
+                  symbol: symbol,
+                  price: (inputRatioPrice * rate).toFixed(6),
+                  completion: completionTokens,
+                  compPrice: (completionRatioPrice * rate).toFixed(6),
+                  total: (textPrice * rate).toFixed(6),
+                },
+              )}
           </p>
           <p>
             {i18next.t(

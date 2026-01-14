@@ -48,9 +48,11 @@ const routerMap = {
   deployment: '/console/deployment',
   playground: '/console/playground',
   personal: '/console/personal',
+  subscription: '/console/subscription',
+  personal_subscription: '/console/personal/subscription',
 };
 
-const SiderBar = ({ onNavigate = () => {} }) => {
+const SiderBar = ({ onNavigate = () => { } }) => {
   const { t } = useTranslation();
   const [collapsed, toggleCollapsed] = useSidebarCollapsed();
   const {
@@ -133,6 +135,11 @@ const SiderBar = ({ onNavigate = () => {} }) => {
         itemKey: 'personal',
         to: '/personal',
       },
+      {
+        text: t('我的订阅'),
+        itemKey: 'personal_subscription',
+        to: '/personal/subscription',
+      },
     ];
 
     // 根据配置过滤项目
@@ -174,6 +181,12 @@ const SiderBar = ({ onNavigate = () => {} }) => {
         text: t('用户管理'),
         itemKey: 'user',
         to: '/user',
+        className: isAdmin() ? '' : 'tableHiddle',
+      },
+      {
+        text: t('订阅管理'),
+        itemKey: 'subscription',
+        to: '/subscription',
         className: isAdmin() ? '' : 'tableHiddle',
       },
       {

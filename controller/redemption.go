@@ -94,12 +94,20 @@ func AddRedemption(c *gin.Context) {
 	for i := 0; i < redemption.Count; i++ {
 		key := common.GetUUID()
 		cleanRedemption := model.Redemption{
-			UserId:      c.GetInt("id"),
-			Name:        redemption.Name,
-			Key:         key,
-			CreatedTime: common.GetTimestamp(),
-			Quota:       redemption.Quota,
-			ExpiredTime: redemption.ExpiredTime,
+			UserId:                       c.GetInt("id"),
+			Name:                         redemption.Name,
+			Key:                          key,
+			CreatedTime:                  common.GetTimestamp(),
+			Quota:                        redemption.Quota,
+			ExpiredTime:                  redemption.ExpiredTime,
+			IsSubscription:               redemption.IsSubscription,
+			SubscriptionModels:           redemption.SubscriptionModels,
+			SubscriptionChannels:         redemption.SubscriptionChannels,
+			SubscriptionGroups:           redemption.SubscriptionGroups,
+			SubscriptionDailyQuota:       redemption.SubscriptionDailyQuota,
+			SubscriptionAllowUserBalance: redemption.SubscriptionAllowUserBalance,
+			SubscriptionRefreshTime:      redemption.SubscriptionRefreshTime,
+			SubscriptionDuration:         redemption.SubscriptionDuration,
 		}
 		err = cleanRedemption.Insert()
 		if err != nil {
@@ -156,6 +164,14 @@ func UpdateRedemption(c *gin.Context) {
 		cleanRedemption.Name = redemption.Name
 		cleanRedemption.Quota = redemption.Quota
 		cleanRedemption.ExpiredTime = redemption.ExpiredTime
+		cleanRedemption.IsSubscription = redemption.IsSubscription
+		cleanRedemption.SubscriptionModels = redemption.SubscriptionModels
+		cleanRedemption.SubscriptionChannels = redemption.SubscriptionChannels
+		cleanRedemption.SubscriptionGroups = redemption.SubscriptionGroups
+		cleanRedemption.SubscriptionDailyQuota = redemption.SubscriptionDailyQuota
+		cleanRedemption.SubscriptionAllowUserBalance = redemption.SubscriptionAllowUserBalance
+		cleanRedemption.SubscriptionRefreshTime = redemption.SubscriptionRefreshTime
+		cleanRedemption.SubscriptionDuration = redemption.SubscriptionDuration
 	}
 	if statusOnly != "" {
 		cleanRedemption.Status = redemption.Status

@@ -24,6 +24,16 @@ type Redemption struct {
 	UsedUserId   int            `json:"used_user_id"`
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
 	ExpiredTime  int64          `json:"expired_time" gorm:"bigint"` // 过期时间，0 表示不过期
+
+	// Subscription related fields
+	IsSubscription               bool   `json:"is_subscription" gorm:"default:false"`
+	SubscriptionModels           string `json:"subscription_models" gorm:"type:text"`
+	SubscriptionChannels         string `json:"subscription_channels" gorm:"type:text"`
+	SubscriptionGroups           string `json:"subscription_groups" gorm:"type:text"`
+	SubscriptionDailyQuota       int    `json:"subscription_daily_quota" gorm:"default:0"`
+	SubscriptionAllowUserBalance bool   `json:"subscription_allow_user_balance" gorm:"default:false"`
+	SubscriptionRefreshTime      string `json:"subscription_refresh_time" gorm:"type:varchar(10);default:'01:00'"`
+	SubscriptionDuration         int    `json:"subscription_duration" gorm:"default:30"` // days
 }
 
 func GetAllRedemptions(startIdx int, num int) (redemptions []*Redemption, total int64, err error) {
@@ -137,9 +147,30 @@ func Redeem(key string, userId int) (quota int, err error) {
 		if redemption.ExpiredTime != 0 && redemption.ExpiredTime < common.GetTimestamp() {
 			return errors.New("该兑换码已过期")
 		}
-		err = tx.Model(&User{}).Where("id = ?", userId).Update("quota", gorm.Expr("quota + ?", redemption.Quota)).Error
-		if err != nil {
-			return err
+		if redemption.IsSubscription {
+			sub := &Subscription{
+				UserId:           userId,
+				Name:             redemption.Name,
+				Status:           common.SubscriptionStatusEnabled,
+				CreatedTime:      common.GetTimestamp(),
+				ExpiredTime:      common.GetTimestamp() + int64(redemption.SubscriptionDuration)*24*3600,
+				DailyQuota:       redemption.SubscriptionDailyQuota,
+				RemainQuota:      redemption.SubscriptionDailyQuota,
+				Models:           redemption.SubscriptionModels,
+				Channels:         redemption.SubscriptionChannels,
+				Groups:           redemption.SubscriptionGroups,
+				AllowUserBalance: redemption.SubscriptionAllowUserBalance,
+				RefreshTime:      redemption.SubscriptionRefreshTime,
+			}
+			err = tx.Create(sub).Error
+			if err != nil {
+				return err
+			}
+		} else {
+			err = tx.Model(&User{}).Where("id = ?", userId).Update("quota", gorm.Expr("quota + ?", redemption.Quota)).Error
+			if err != nil {
+				return err
+			}
 		}
 		redemption.RedeemedTime = common.GetTimestamp()
 		redemption.Status = common.RedemptionCodeStatusUsed
@@ -150,7 +181,11 @@ func Redeem(key string, userId int) (quota int, err error) {
 	if err != nil {
 		return 0, errors.New("兑换失败，" + err.Error())
 	}
-	RecordLog(userId, LogTypeTopup, fmt.Sprintf("通过兑换码充值 %s，兑换码ID %d", logger.LogQuota(redemption.Quota), redemption.Id))
+	if redemption.IsSubscription {
+		RecordLog(userId, LogTypeTopup, fmt.Sprintf("通过兑换码兑换订阅：%s，兑换码ID %d", redemption.Name, redemption.Id))
+		return 0, nil
+	}
+	RecordLog(userId, LogTypeTopup, fmt.Sprintf("通过兑换码充值：%s，兑换码ID %d", logger.LogQuota(redemption.Quota), redemption.Id))
 	return redemption.Quota, nil
 }
 
@@ -168,7 +203,9 @@ func (redemption *Redemption) SelectUpdate() error {
 // Update Make sure your token's fields is completed, because this will update non-zero values
 func (redemption *Redemption) Update() error {
 	var err error
-	err = DB.Model(redemption).Select("name", "status", "quota", "redeemed_time", "expired_time").Updates(redemption).Error
+	err = DB.Model(redemption).Select("name", "status", "quota", "redeemed_time", "expired_time",
+		"is_subscription", "subscription_models", "subscription_channels", "subscription_groups",
+		"subscription_daily_quota", "subscription_allow_user_balance", "subscription_refresh_time", "subscription_duration").Updates(redemption).Error
 	return err
 }
 

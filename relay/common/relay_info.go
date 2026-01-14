@@ -117,6 +117,10 @@ type RelayInfo struct {
 	IsClaudeBetaQuery      bool // /v1/messages?beta=true
 	IsChannelTest          bool // channel test request
 
+	SubscriptionId               int
+	UseSubscription              bool
+	SubscriptionAllowUserBalance bool
+
 	PriceData types.PriceData
 
 	Request dto.Request
@@ -206,6 +210,9 @@ func (info *RelayInfo) ToString() string {
 	// User & token info (mask secrets)
 	fmt.Fprintf(b, "User{ Id: %d, Email: %q, Group: %q, UsingGroup: %q, Quota: %d }, ",
 		info.UserId, common.MaskEmail(info.UserEmail), info.UserGroup, info.UsingGroup, info.UserQuota)
+	if info.UseSubscription {
+		fmt.Fprintf(b, "Subscription{ Id: %d, AllowBalance: %t }, ", info.SubscriptionId, info.SubscriptionAllowUserBalance)
+	}
 	fmt.Fprintf(b, "Token{ Id: %d, Unlimited: %t, Key: ***masked*** }, ", info.TokenId, info.TokenUnlimited)
 
 	// Time info

@@ -37,6 +37,8 @@ type Log struct {
 	Group            string `json:"group" gorm:"index"`
 	Ip               string `json:"ip" gorm:"index;default:''"`
 	Other            string `json:"other"`
+	SubscriptionId   int    `json:"subscription_id" gorm:"index;default:0"`
+	SubscriptionName string `json:"subscription_name" gorm:"->"`
 }
 
 // don't use iota, avoid change log type value
@@ -151,6 +153,7 @@ type RecordConsumeLogParams struct {
 	IsStream         bool                   `json:"is_stream"`
 	Group            string                 `json:"group"`
 	Other            map[string]interface{} `json:"other"`
+	SubscriptionId   int                    `json:"subscription_id"`
 }
 
 func RecordConsumeLog(c *gin.Context, userId int, params RecordConsumeLogParams) {
@@ -189,7 +192,7 @@ func RecordConsumeLog(c *gin.Context, userId int, params RecordConsumeLogParams)
 			}
 			return ""
 		}(),
-		Other: otherStr,
+		Other: otherStr, SubscriptionId: params.SubscriptionId,
 	}
 	err := LOG_DB.Create(log).Error
 	if err != nil {
@@ -264,6 +267,30 @@ func GetAllLogs(logType int, startTimestamp int64, endTimestamp int64, modelName
 		}
 	}
 
+	subscriptionIds := types.NewSet[int]()
+	for _, log := range logs {
+		if log.SubscriptionId != 0 {
+			subscriptionIds.Add(log.SubscriptionId)
+		}
+	}
+
+	if subscriptionIds.Len() > 0 {
+		var subscriptions []struct {
+			Id   int    `gorm:"column:id"`
+			Name string `gorm:"column:name"`
+		}
+		if err = DB.Table("subscriptions").Select("id, name").Where("id IN ?", subscriptionIds.Items()).Find(&subscriptions).Error; err != nil {
+			return logs, total, err
+		}
+		subscriptionMap := make(map[int]string, len(subscriptions))
+		for _, subscription := range subscriptions {
+			subscriptionMap[subscription.Id] = subscription.Name
+		}
+		for i := range logs {
+			logs[i].SubscriptionName = subscriptionMap[logs[i].SubscriptionId]
+		}
+	}
+
 	return logs, total, err
 }
 
@@ -297,6 +324,30 @@ func GetUserLogs(userId int, logType int, startTimestamp int64, endTimestamp int
 	err = tx.Order("logs.id desc").Limit(num).Offset(startIdx).Find(&logs).Error
 	if err != nil {
 		return nil, 0, err
+	}
+
+	subscriptionIds := types.NewSet[int]()
+	for _, log := range logs {
+		if log.SubscriptionId != 0 {
+			subscriptionIds.Add(log.SubscriptionId)
+		}
+	}
+
+	if subscriptionIds.Len() > 0 {
+		var subscriptions []struct {
+			Id   int    `gorm:"column:id"`
+			Name string `gorm:"column:name"`
+		}
+		if err = DB.Table("subscriptions").Select("id, name").Where("id IN ?", subscriptionIds.Items()).Find(&subscriptions).Error; err != nil {
+			return logs, total, err
+		}
+		subscriptionMap := make(map[int]string, len(subscriptions))
+		for _, subscription := range subscriptions {
+			subscriptionMap[subscription.Id] = subscription.Name
+		}
+		for i := range logs {
+			logs[i].SubscriptionName = subscriptionMap[logs[i].SubscriptionId]
+		}
 	}
 
 	formatUserLogs(logs)

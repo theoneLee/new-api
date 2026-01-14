@@ -205,3 +205,8 @@ const (
 	TopUpStatusSuccess = "success"
 	TopUpStatusExpired = "expired"
 )
+
+const (
+	SubscriptionStatusEnabled  = 1 // don't use 0, 0 is the default value!
+	SubscriptionStatusDisabled = 2 // also don't use 0
+)

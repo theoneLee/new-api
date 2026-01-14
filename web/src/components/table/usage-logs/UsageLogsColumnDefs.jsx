@@ -181,7 +181,7 @@ function renderModelName(record, copyText, t) {
   if (!modelMapped) {
     return renderModelTag(record.model_name, {
       onClick: (event) => {
-        copyText(event, record.model_name).then((r) => {});
+        copyText(event, record.model_name).then((r) => { });
       },
     });
   } else {
@@ -198,7 +198,7 @@ function renderModelName(record, copyText, t) {
                     </Typography.Text>
                     {renderModelTag(record.model_name, {
                       onClick: (event) => {
-                        copyText(event, record.model_name).then((r) => {});
+                        copyText(event, record.model_name).then((r) => { });
                       },
                     })}
                   </div>
@@ -209,7 +209,7 @@ function renderModelName(record, copyText, t) {
                     {renderModelTag(other.upstream_model_name, {
                       onClick: (event) => {
                         copyText(event, other.upstream_model_name).then(
-                          (r) => {},
+                          (r) => { },
                         );
                       },
                     })}
@@ -220,7 +220,7 @@ function renderModelName(record, copyText, t) {
           >
             {renderModelTag(record.model_name, {
               onClick: (event) => {
-                copyText(event, record.model_name).then((r) => {});
+                copyText(event, record.model_name).then((r) => { });
               },
               suffixIcon: (
                 <Route
@@ -455,6 +455,34 @@ export const getLogsColumns = ({
       },
     },
     {
+      key: COLUMN_KEYS.PAYMENT,
+      title: t('支付'),
+      dataIndex: 'subscription_id',
+      render: (text, record, index) => {
+        if (!record.subscription_id) {
+          return (
+            <Tag color='cyan' shape='circle'>
+              {t('余额')}
+            </Tag>
+          );
+        }
+        return (
+          <Tooltip content={t('点击复制ID')}>
+            <Tag
+              color='violet'
+              shape='circle'
+              onClick={(event) => {
+                copyText(event, record.subscription_id);
+              }}
+              style={{ cursor: 'pointer' }}
+            >
+              {t('订阅')} : {record.subscription_name}
+            </Tag>
+          </Tooltip>
+        );
+      },
+    },
+    {
       key: COLUMN_KEYS.IP,
       title: (
         <div className='flex items-center gap-1'>
@@ -543,41 +571,41 @@ export const getLogsColumns = ({
         }
         let content = other?.claude
           ? renderModelPriceSimple(
-              other.model_ratio,
-              other.model_price,
-              other.group_ratio,
-              other?.user_group_ratio,
-              other.cache_tokens || 0,
-              other.cache_ratio || 1.0,
-              other.cache_creation_tokens || 0,
-              other.cache_creation_ratio || 1.0,
-              other.cache_creation_tokens_5m || 0,
-              other.cache_creation_ratio_5m || other.cache_creation_ratio || 1.0,
-              other.cache_creation_tokens_1h || 0,
-              other.cache_creation_ratio_1h || other.cache_creation_ratio || 1.0,
-              false,
-              1.0,
-              other?.is_system_prompt_overwritten,
-              'claude',
-            )
+            other.model_ratio,
+            other.model_price,
+            other.group_ratio,
+            other?.user_group_ratio,
+            other.cache_tokens || 0,
+            other.cache_ratio || 1.0,
+            other.cache_creation_tokens || 0,
+            other.cache_creation_ratio || 1.0,
+            other.cache_creation_tokens_5m || 0,
+            other.cache_creation_ratio_5m || other.cache_creation_ratio || 1.0,
+            other.cache_creation_tokens_1h || 0,
+            other.cache_creation_ratio_1h || other.cache_creation_ratio || 1.0,
+            false,
+            1.0,
+            other?.is_system_prompt_overwritten,
+            'claude',
+          )
           : renderModelPriceSimple(
-              other.model_ratio,
-              other.model_price,
-              other.group_ratio,
-              other?.user_group_ratio,
-              other.cache_tokens || 0,
-              other.cache_ratio || 1.0,
-              0,
-              1.0,
-              0,
-              1.0,
-              0,
-              1.0,
-              false,
-              1.0,
-              other?.is_system_prompt_overwritten,
-              'openai',
-            );
+            other.model_ratio,
+            other.model_price,
+            other.group_ratio,
+            other?.user_group_ratio,
+            other.cache_tokens || 0,
+            other.cache_ratio || 1.0,
+            0,
+            1.0,
+            0,
+            1.0,
+            0,
+            1.0,
+            false,
+            1.0,
+            other?.is_system_prompt_overwritten,
+            'openai',
+          );
         return (
           <Typography.Paragraph
             ellipsis={{

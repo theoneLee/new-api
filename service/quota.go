@@ -231,7 +231,7 @@ func PostWssConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, mod
 		UseTimeSeconds:   int(useTimeSeconds),
 		IsStream:         relayInfo.IsStream,
 		Group:            relayInfo.UsingGroup,
-		Other:            other,
+		Other:            other, SubscriptionId: relayInfo.SubscriptionId,
 	})
 }
 
@@ -348,7 +348,7 @@ func PostClaudeConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, 
 		UseTimeSeconds:   int(useTimeSeconds),
 		IsStream:         relayInfo.IsStream,
 		Group:            relayInfo.UsingGroup,
-		Other:            other,
+		Other:            other, SubscriptionId: relayInfo.SubscriptionId,
 	})
 
 }
@@ -473,7 +473,7 @@ func PostAudioConsumeQuota(ctx *gin.Context, relayInfo *relaycommon.RelayInfo, u
 		UseTimeSeconds:   int(useTimeSeconds),
 		IsStream:         relayInfo.IsStream,
 		Group:            relayInfo.UsingGroup,
-		Other:            other,
+		Other:            other, SubscriptionId: relayInfo.SubscriptionId,
 	})
 }
 
@@ -502,6 +502,43 @@ func PreConsumeTokenQuota(relayInfo *relaycommon.RelayInfo, quota int) error {
 }
 
 func PostConsumeQuota(relayInfo *relaycommon.RelayInfo, quota int, preConsumedQuota int, sendEmail bool) (err error) {
+	if relayInfo.UseSubscription {
+		sub, err := model.GetSubscriptionById(relayInfo.SubscriptionId)
+		if err != nil {
+			return err
+		}
+		if quota > 0 {
+			if sub.RemainQuota >= quota {
+				err = sub.DecreaseRemainingQuota(quota)
+			} else {
+				remaining := sub.RemainQuota
+				err = sub.DecreaseRemainingQuota(remaining)
+				if err != nil {
+					return err
+				}
+				if relayInfo.SubscriptionAllowUserBalance {
+					overflow := quota - remaining
+					err = model.DecreaseUserQuota(relayInfo.UserId, overflow)
+				} else {
+					common.SysLog(fmt.Sprintf("Subscription %d quota exhausted and balance not allowed, but actual quota %d overflowed by %d", sub.Id, quota, quota-remaining))
+				}
+			}
+		} else if quota < 0 {
+			err = sub.IncreaseRemainingQuota(-quota)
+		}
+		if err != nil {
+			return err
+		}
+
+		if !relayInfo.IsPlayground {
+			if quota > 0 {
+				err = model.DecreaseTokenQuota(relayInfo.TokenId, relayInfo.TokenKey, quota)
+			} else {
+				err = model.IncreaseTokenQuota(relayInfo.TokenId, relayInfo.TokenKey, -quota)
+			}
+		}
+		return err
+	}
 
 	if quota > 0 {
 		err = model.DecreaseUserQuota(relayInfo.UserId, quota)
