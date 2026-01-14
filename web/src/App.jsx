@@ -46,7 +46,7 @@ import ModelDeploymentPage from './pages/ModelDeployment';
 import Playground from './pages/Playground';
 import OAuth2Callback from './components/auth/OAuth2Callback';
 import PersonalSetting from './components/settings/PersonalSetting';
-import Subscription from './pages/Subscription/index.jsx';
+import SubscriptionPage from './pages/SubscriptionPage';
 import Setup from './pages/Setup';
 import SetupCheck from './components/layout/SetupCheck';
 
@@ -261,7 +261,7 @@ function App() {
           element={
             <AdminRoute>
               <Suspense fallback={<Loading></Loading>} key={location.pathname}>
-                <Subscription />
+                <SubscriptionPage />
               </Suspense>
             </AdminRoute>
           }
@@ -271,7 +271,7 @@ function App() {
           element={
             <PrivateRoute>
               <Suspense fallback={<Loading></Loading>} key={location.pathname}>
-                <Subscription />
+                <SubscriptionPage />
               </Suspense>
             </PrivateRoute>
           }

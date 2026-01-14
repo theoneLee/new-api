@@ -1,0 +1,64 @@
+/*
+Copyright (C) 2025 QuantumNous
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+For commercial licensing, please contact support@quantumnous.com
+*/
+
+import React from 'react';
+import { Button } from '@douyinfe/semi-ui';
+import { isAdmin } from '../../../helpers';
+import { useNavigate } from 'react-router-dom';
+
+const SubscriptionsActions = ({
+    setEditingSubscription,
+    setShowEdit,
+    t,
+}) => {
+    const navigate = useNavigate();
+
+    const handleAddSubscription = () => {
+        setEditingSubscription({
+            id: undefined,
+        });
+        setShowEdit(true);
+    };
+
+    return (
+        <div className='flex flex-wrap gap-2 w-full md:w-auto order-2 md:order-1'>
+            {isAdmin() && (
+                <Button
+                    type='primary'
+                    className='flex-1 md:flex-initial'
+                    onClick={handleAddSubscription}
+                    size='small'
+                >
+                    {t('添加订阅')}
+                </Button>
+            )}
+
+            <Button
+                type='tertiary'
+                className='flex-1 md:flex-initial'
+                onClick={() => navigate('/console/topup')}
+                size='small'
+            >
+                {t('兑换订阅码')}
+            </Button>
+        </div>
+    );
+};
+
+export default SubscriptionsActions;
