@@ -39,6 +39,7 @@ export const useSubscriptionsData = () => {
     const [pageSize, setPageSize] = useState(ITEMS_PER_PAGE);
     const [subscriptionCount, setSubscriptionCount] = useState(0);
     const [selectedKeys, setSelectedKeys] = useState([]);
+    const [sort, setSort] = useState('');
 
     // Edit state
     const [editingSubscription, setEditingSubscription] = useState({
@@ -54,24 +55,26 @@ export const useSubscriptionsData = () => {
 
     // Form state
     const formInitValues = {
-        searchKeyword: '',
+        searchId: '',
+        searchUserId: '',
     };
 
     // Get form values
     const getFormValues = () => {
         const formValues = formApi ? formApi.getValues() : {};
         return {
-            searchKeyword: formValues.searchKeyword || '',
+            searchId: formValues.searchId || '',
+            searchUserId: formValues.searchUserId || '',
         };
     };
 
     // Load subscription list
-    const loadSubscriptions = async (page = 1, size = pageSize) => {
+    const loadSubscriptions = async (page = 1, size = pageSize, currentSort = sort) => {
         setLoading(true);
         try {
             const endpoint = isAdmin() ? '/api/subscription/' : '/api/subscription/self';
             const res = await API.get(
-                `${endpoint}?p=${page}&page_size=${size}`,
+                `${endpoint}?p=${page}&page_size=${size}&sort=${currentSort}`,
             );
             const { success, message, data } = res.data;
             if (success) {
@@ -93,19 +96,21 @@ export const useSubscriptionsData = () => {
     };
 
     // Search subscriptions (Admin only)
-    const searchSubscriptions = async () => {
+    const searchSubscriptions = async (currentSort = sort) => {
         if (!isAdmin()) return;
 
-        const { searchKeyword } = getFormValues();
-        if (searchKeyword === '') {
-            await loadSubscriptions(1, pageSize);
+        const actualSort = typeof currentSort === 'string' ? currentSort : sort;
+
+        const { searchId, searchUserId } = getFormValues();
+        if (searchId === '' && searchUserId === '') {
+            await loadSubscriptions(1, pageSize, actualSort);
             return;
         }
 
         setSearching(true);
         try {
             const res = await API.get(
-                `/api/subscription/search?keyword=${searchKeyword}&p=1&page_size=${pageSize}`,
+                `/api/subscription/search?id=${searchId}&user_id=${searchUserId}&p=1&page_size=${pageSize}&sort=${actualSort}`,
             );
             const { success, message, data } = res.data;
             if (success) {
@@ -161,9 +166,9 @@ export const useSubscriptionsData = () => {
 
     // Refresh data
     const refresh = async (page = activePage) => {
-        const { searchKeyword } = getFormValues();
-        if (!isAdmin() || searchKeyword === '') {
-            await loadSubscriptions(page, pageSize);
+        const { searchId, searchUserId } = getFormValues();
+        if (!isAdmin() || (searchId === '' && searchUserId === '')) {
+            await loadSubscriptions(page, pageSize, sort);
         } else {
             await searchSubscriptions();
         }
@@ -172,9 +177,9 @@ export const useSubscriptionsData = () => {
     // Handle page change
     const handlePageChange = (page) => {
         setActivePage(page);
-        const { searchKeyword } = getFormValues();
-        if (!isAdmin() || searchKeyword === '') {
-            loadSubscriptions(page, pageSize);
+        const { searchId, searchUserId } = getFormValues();
+        if (!isAdmin() || (searchId === '' && searchUserId === '')) {
+            loadSubscriptions(page, pageSize, sort);
         } else {
             searchSubscriptions();
         }
@@ -184,11 +189,31 @@ export const useSubscriptionsData = () => {
     const handlePageSizeChange = (size) => {
         setPageSize(size);
         setActivePage(1);
-        const { searchKeyword } = getFormValues();
-        if (!isAdmin() || searchKeyword === '') {
-            loadSubscriptions(1, size);
+        const { searchId, searchUserId } = getFormValues();
+        if (!isAdmin() || (searchId === '' && searchUserId === '')) {
+            loadSubscriptions(1, size, sort);
         } else {
             searchSubscriptions();
+        }
+    };
+
+    // Handle table change (sorting)
+    // Semi Design onChange signature: (changeInfo: { pagination, filters, sorter, extra }) => void
+    const handleTableChange = ({ sorter }) => {
+        if (sorter) {
+            let sortStr = '';
+            if (sorter.sortOrder) {
+                const field = sorter.dataIndex === 'id' ? 'id' : sorter.dataIndex;
+                const order = sorter.sortOrder === 'descend' ? 'desc' : 'asc';
+                sortStr = `${field} ${order}`;
+            }
+            setSort(sortStr);
+            const { searchId, searchUserId } = getFormValues();
+            if (!isAdmin() || (searchId === '' && searchUserId === '')) {
+                loadSubscriptions(activePage, pageSize, sortStr);
+            } else {
+                searchSubscriptions(sortStr);
+            }
         }
     };
 
@@ -258,6 +283,7 @@ export const useSubscriptionsData = () => {
         setLoading,
         handlePageChange,
         handlePageSizeChange,
+        handleTableChange,
         rowSelection,
         closeEdit,
         getFormValues,

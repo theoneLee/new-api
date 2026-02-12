@@ -40,6 +40,7 @@ import {
     Avatar,
     Row,
     Col,
+    Select,
 } from '@douyinfe/semi-ui';
 import {
     IconSave,
@@ -48,6 +49,7 @@ import {
     IconCreditCard,
     IconUser,
     IconSetting,
+    IconSearch,
 } from '@douyinfe/semi-icons';
 
 const { Text, Title } = Typography;
@@ -56,6 +58,9 @@ const EditSubscriptionModal = (props) => {
     const { t } = useTranslation();
     const isEdit = props.editingSubscription.id !== undefined;
     const [loading, setLoading] = useState(false);
+    const [groupOptions, setGroupOptions] = useState([]);
+    const [userOptions, setUserOptions] = useState([]);
+    const [userLoading, setUserLoading] = useState(false);
     const isMobile = useIsMobile();
     const formApiRef = useRef(null);
 
@@ -64,8 +69,7 @@ const EditSubscriptionModal = (props) => {
         name: '',
         daily_quota: 1000000,
         models: '',
-        channels: '',
-        groups: '',
+        groups: [],
         refresh_time: '00:00',
         expired_time: null,
         allow_user_balance: true,
@@ -87,6 +91,14 @@ const EditSubscriptionModal = (props) => {
                 } else {
                     data.expired_time = new Date(data.expired_time * 1000);
                 }
+                if (data.groups === '') {
+                    data.groups = [];
+                } else {
+                    data.groups = data.groups.split(',');
+                }
+                if (data.user_id) {
+                    setUserOptions([{ label: `ID: ${data.user_id}`, value: data.user_id }]);
+                }
                 formApiRef.current?.setValues(data);
             } else {
                 showError(message);
@@ -97,6 +109,54 @@ const EditSubscriptionModal = (props) => {
         setLoading(false);
     };
 
+    const fetchGroups = async () => {
+        try {
+            let res = await API.get(`/api/group/`);
+            if (res && res.data && res.data.success) {
+                setGroupOptions(res.data.data.map((g) => ({ label: g, value: g })));
+            }
+        } catch (e) {
+            showError(e.message);
+        }
+    };
+
+    const searchUsers = async (keyword) => {
+        setUserLoading(true);
+        try {
+            const path = keyword ? `/api/user/search?keyword=${keyword}` : `/api/user/`;
+            let res = await API.get(path);
+            const { success, data } = res.data;
+            if (success && data) {
+                const items = data.items || data;
+                const newOptions = items.map((user) => ({
+                    label: `${user.username} (${user.id})`,
+                    value: user.id,
+                }));
+
+                if (isEdit && formApiRef.current) {
+                    const currentId = formApiRef.current.getValue('user_id');
+                    if (currentId && !newOptions.find(o => o.value === currentId)) {
+                        newOptions.unshift({ label: `ID: ${currentId}`, value: currentId });
+                    }
+                }
+                setUserOptions(newOptions);
+            }
+        } catch (e) {
+            showError(e.message);
+        }
+        setUserLoading(false);
+    };
+
+    useEffect(() => {
+        if (props.visible && isAdmin()) {
+            fetchGroups();
+            if (!isEdit) {
+                setUserOptions([]);
+                searchUsers('');
+            }
+        }
+    }, [props.visible, isEdit]);
+
     useEffect(() => {
         if (formApiRef.current) {
             if (isEdit) {
@@ -105,13 +165,32 @@ const EditSubscriptionModal = (props) => {
                 formApiRef.current.setValues(getInitValues());
             }
         }
-    }, [props.editingSubscription.id, props.visiable]);
+    }, [props.editingSubscription.id, props.visible]);
 
     const submit = async (values) => {
         setLoading(true);
         let localInputs = { ...values };
         localInputs.user_id = parseInt(localInputs.user_id);
         localInputs.daily_quota = parseInt(localInputs.daily_quota);
+        if (Array.isArray(localInputs.groups)) {
+            localInputs.groups = localInputs.groups.join(',');
+        }
+
+        if (localInputs.refresh_time && typeof localInputs.refresh_time === 'object') {
+            const date = new Date(localInputs.refresh_time);
+            if (!isNaN(date.getTime())) {
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                localInputs.refresh_time = `${hours}:${minutes}`;
+            }
+        } else if (typeof localInputs.refresh_time === 'string' && localInputs.refresh_time.includes('T')) {
+            const date = new Date(localInputs.refresh_time);
+            if (!isNaN(date.getTime())) {
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                localInputs.refresh_time = `${hours}:${minutes}`;
+            }
+        }
 
         if (!localInputs.expired_time) {
             localInputs.expired_time = 0;
@@ -203,7 +282,20 @@ const EditSubscriptionModal = (props) => {
                             }>
                                 <Form.Input field='name' label={t('名称')} placeholder={t('订阅名称')} rules={[{ required: true }]} />
                                 {isAdmin() && (
-                                    <Form.InputNumber field='user_id' label={t('用户ID')} placeholder={t('所属用户ID')} rules={[{ required: true }]} />
+                                    <Form.Select
+                                        field='user_id'
+                                        label={t('用户ID')}
+                                        placeholder={t('搜索用户或输入ID')}
+                                        rules={[{ required: true }]}
+                                        filter
+                                        remote
+                                        searchIcon={<IconSearch />}
+                                        loading={userLoading}
+                                        onSearch={searchUsers}
+                                        onDropdownVisibleChange={(visible) => visible && searchUsers('')}
+                                        optionList={userOptions}
+                                        allowAdditions
+                                    />
                                 )}
                                 <Form.DatePicker field='expired_time' label={t('过期时间')} type='dateTime' placeholder={t('留空为永久')} />
                             </Card>
@@ -231,8 +323,16 @@ const EditSubscriptionModal = (props) => {
                                 </Space>
                             }>
                                 <Form.Input field='models' label={t('可用模型')} placeholder={t('英文逗号分隔，留空不限')} />
-                                <Form.Input field='channels' label={t('可用渠道')} placeholder={t('英文逗号分隔，留空不限')} />
-                                <Form.Input field='groups' label={t('所属分组')} placeholder={t('英文逗号分隔，留空不限')} />
+                                <Form.Select
+                                    field='groups'
+                                    label={t('所属分组')}
+                                    placeholder={t('请选择分组')}
+                                    optionList={groupOptions}
+                                    multiple
+                                    allowAdditions
+                                    filter
+                                    searchIcon={<IconSearch />}
+                                />
                             </Card>
                         </div>
                     )}

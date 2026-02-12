@@ -5,6 +5,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/QuantumNous/new-api/common"
 	"gorm.io/gorm"
@@ -23,8 +24,22 @@ type Subscription struct {
 	Channels         string         `json:"channels" gorm:"type:text"` // allowed channels, comma separated, empty means all
 	Groups           string         `json:"groups" gorm:"type:text"`   // allowed groups, comma separated, empty means all
 	AllowUserBalance bool           `json:"allow_user_balance" gorm:"default:false"`
-	RefreshTime      string         `json:"refresh_time" gorm:"type:varchar(10);default:'01:00'"`
+	RefreshTime      string         `json:"refresh_time" gorm:"type:varchar(64);default:'01:00'"`
 	DeletedAt        gorm.DeletedAt `gorm:"index"`
+}
+
+func (subscription *Subscription) formatRefreshTime() {
+	if subscription.RefreshTime == "" {
+		subscription.RefreshTime = "01:00"
+		return
+	}
+	// If it's a full ISO timestamp (contains T and Z), extract HH:mm
+	if strings.Contains(subscription.RefreshTime, "T") {
+		t, err := time.Parse(time.RFC3339, subscription.RefreshTime)
+		if err == nil {
+			subscription.RefreshTime = t.Format("15:04")
+		}
+	}
 }
 
 func (subscription *Subscription) GetModels() []string {
@@ -48,28 +63,45 @@ func (subscription *Subscription) GetGroups() []string {
 	return strings.Split(subscription.Groups, ",")
 }
 
-func GetAllSubscriptions(startIdx int, num int) ([]*Subscription, int64, error) {
+func GetAllSubscriptions(startIdx int, num int, sort string) ([]*Subscription, int64, error) {
 	var subscriptions []*Subscription
 	var total int64
+	if sort == "" {
+		sort = "id desc"
+	}
 	DB.Model(&Subscription{}).Count(&total)
-	err := DB.Order("id desc").Limit(num).Offset(startIdx).Find(&subscriptions).Error
+	err := DB.Order(sort).Limit(num).Offset(startIdx).Find(&subscriptions).Error
 	return subscriptions, total, err
 }
 
-func GetUserSubscriptions(userId int, startIdx int, num int) ([]*Subscription, int64, error) {
+func GetUserSubscriptions(userId int, startIdx int, num int, sort string) ([]*Subscription, int64, error) {
 	var subscriptions []*Subscription
 	var total int64
+	if sort == "" {
+		sort = "id desc"
+	}
 	DB.Model(&Subscription{}).Where("user_id = ?", userId).Count(&total)
-	err := DB.Where("user_id = ?", userId).Order("id desc").Limit(num).Offset(startIdx).Find(&subscriptions).Error
+	err := DB.Where("user_id = ?", userId).Order(sort).Limit(num).Offset(startIdx).Find(&subscriptions).Error
 	return subscriptions, total, err
 }
 
-func SearchSubscriptions(keyword string, startIdx int, num int) ([]*Subscription, int64, error) {
+func SearchSubscriptions(id int, userId int, startIdx int, num int, sort string) ([]*Subscription, int64, error) {
 	var subscriptions []*Subscription
 	var total int64
-	key := "%" + keyword + "%"
-	DB.Model(&Subscription{}).Where("id LIKE ? OR name LIKE ?", key, key).Count(&total)
-	err := DB.Where("id LIKE ? OR name LIKE ?", key, key).Order("id desc").Limit(num).Offset(startIdx).Find(&subscriptions).Error
+	if sort == "" {
+		sort = "id desc"
+	}
+	query := DB.Model(&Subscription{})
+
+	if id > 0 {
+		query = query.Where("id = ?", id)
+	}
+	if userId > 0 {
+		query = query.Where("user_id = ?", userId)
+	}
+
+	query.Count(&total)
+	err := query.Order(sort).Limit(num).Offset(startIdx).Find(&subscriptions).Error
 	return subscriptions, total, err
 }
 
@@ -90,11 +122,13 @@ func (subscription *Subscription) Insert() error {
 	if subscription.RemainQuota == 0 {
 		subscription.RemainQuota = subscription.DailyQuota
 	}
+	subscription.formatRefreshTime()
 	return DB.Create(subscription).Error
 }
 
 func (subscription *Subscription) Update() error {
-	return DB.Model(subscription).Select("*").Omit("id", "created_time").Updates(subscription).Error
+	subscription.formatRefreshTime()
+	return DB.Model(subscription).Select("*").Omit("id", "created_time", "remain_quota").Updates(subscription).Error
 }
 
 func (subscription *Subscription) Delete() error {

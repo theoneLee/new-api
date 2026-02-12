@@ -32,7 +32,7 @@ type Redemption struct {
 	SubscriptionGroups           string `json:"subscription_groups" gorm:"type:text"`
 	SubscriptionDailyQuota       int    `json:"subscription_daily_quota" gorm:"default:0"`
 	SubscriptionAllowUserBalance bool   `json:"subscription_allow_user_balance" gorm:"default:false"`
-	SubscriptionRefreshTime      string `json:"subscription_refresh_time" gorm:"type:varchar(10);default:'01:00'"`
+	SubscriptionRefreshTime      string `json:"subscription_refresh_time" gorm:"type:varchar(64);default:'01:00'"`
 	SubscriptionDuration         int    `json:"subscription_duration" gorm:"default:30"` // days
 }
 

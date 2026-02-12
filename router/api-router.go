@@ -202,6 +202,7 @@ func SetApiRouter(router *gin.Engine) {
 		{
 			subscriptionRoute.GET("/self", middleware.UserAuth(), controller.GetUserSubscriptions)
 			subscriptionRoute.GET("/", middleware.AdminAuth(), controller.GetAllSubscriptions)
+			subscriptionRoute.GET("/search", middleware.AdminAuth(), controller.SearchSubscriptions)
 			subscriptionRoute.GET("/:id", middleware.UserAuth(), controller.GetSubscriptionByID)
 			subscriptionRoute.POST("/", middleware.AdminAuth(), controller.AddSubscription)
 			subscriptionRoute.PUT("/", middleware.AdminAuth(), controller.UpdateSubscription)

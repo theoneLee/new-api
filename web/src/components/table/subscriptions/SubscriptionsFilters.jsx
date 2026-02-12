@@ -58,14 +58,22 @@ const SubscriptionsFilters = ({
             className='w-full md:w-auto order-1 md:order-2'
         >
             <div className='flex flex-col md:flex-row items-center gap-2 w-full md:w-auto'>
-                <div className='relative w-full md:w-64'>
+                <div className='flex items-center gap-2'>
                     <Form.Input
-                        field='searchKeyword'
-                        prefix={<IconSearch />}
-                        placeholder={t('关键字(id或者名称)')}
+                        field='searchId'
+                        placeholder={t('订阅 ID')}
                         showClear
                         pure
                         size='small'
+                        style={{ width: 120 }}
+                    />
+                    <Form.Input
+                        field='searchUserId'
+                        placeholder={t('用户 ID')}
+                        showClear
+                        pure
+                        size='small'
+                        style={{ width: 120 }}
                     />
                 </div>
                 <div className='flex gap-2 w-full md:w-auto'>

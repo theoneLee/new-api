@@ -66,6 +66,7 @@ export const getSubscriptionsColumns = ({
         {
             title: t('ID'),
             dataIndex: 'id',
+            sorter: true,
         },
         {
             title: t('名称'),
@@ -94,6 +95,7 @@ export const getSubscriptionsColumns = ({
             title: t('过期时间'),
             dataIndex: 'expired_time',
             render: (text) => timestamp2string(text),
+            sorter: true,
         },
     ];
 
@@ -101,6 +103,7 @@ export const getSubscriptionsColumns = ({
         columns.splice(1, 0, {
             title: t('用户ID'),
             dataIndex: 'user_id',
+            sorter: true,
         });
     }
 

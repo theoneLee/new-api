@@ -108,6 +108,7 @@ const SubscriptionsTable = (subscriptionsData) => {
                 hidePagination={true}
                 loading={loading}
                 rowSelection={rowSelection}
+                onChange={subscriptionsData.handleTableChange}
                 empty={
                     <Empty
                         image={<IllustrationNoResult style={{ width: 150, height: 150 }} />}

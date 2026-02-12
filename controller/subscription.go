@@ -10,7 +10,8 @@ import (
 
 func GetAllSubscriptions(c *gin.Context) {
 	pageInfo := common.GetPageQuery(c)
-	subscriptions, total, err := model.GetAllSubscriptions(pageInfo.GetStartIdx(), pageInfo.GetPageSize())
+	sort := c.Query("sort")
+	subscriptions, total, err := model.GetAllSubscriptions(pageInfo.GetStartIdx(), pageInfo.GetPageSize(), sort)
 	if err != nil {
 		common.ApiError(c, err)
 		return
@@ -23,7 +24,8 @@ func GetAllSubscriptions(c *gin.Context) {
 func GetUserSubscriptions(c *gin.Context) {
 	userId := c.GetInt("id")
 	pageInfo := common.GetPageQuery(c)
-	subscriptions, total, err := model.GetUserSubscriptions(userId, pageInfo.GetStartIdx(), pageInfo.GetPageSize())
+	sort := c.Query("sort")
+	subscriptions, total, err := model.GetUserSubscriptions(userId, pageInfo.GetStartIdx(), pageInfo.GetPageSize(), sort)
 	if err != nil {
 		common.ApiError(c, err)
 		return
@@ -34,9 +36,11 @@ func GetUserSubscriptions(c *gin.Context) {
 }
 
 func SearchSubscriptions(c *gin.Context) {
-	keyword := c.Query("keyword")
+	id, _ := strconv.Atoi(c.Query("id"))
+	userId, _ := strconv.Atoi(c.Query("user_id"))
 	pageInfo := common.GetPageQuery(c)
-	subscriptions, total, err := model.SearchSubscriptions(keyword, pageInfo.GetStartIdx(), pageInfo.GetPageSize())
+	sort := c.Query("sort")
+	subscriptions, total, err := model.SearchSubscriptions(id, userId, pageInfo.GetStartIdx(), pageInfo.GetPageSize(), sort)
 	if err != nil {
 		common.ApiError(c, err)
 		return
