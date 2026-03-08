@@ -142,6 +142,16 @@ func (subscription *Subscription) SelectUpdate() error {
 	return DB.Model(subscription).Select("status").Updates(subscription).Error
 }
 
+// ResetDailyQuota 将订阅的剩余额度重置为每日额度，仅更新 remain_quota 字段
+func (subscription *Subscription) ResetDailyQuota() error {
+	return DB.Model(subscription).Update("remain_quota", subscription.DailyQuota).Error
+}
+
+// UpdateQuota 保留给历史调用，内部委托给 ResetDailyQuota
+func (subscription *Subscription) UpdateQuota() error {
+	return subscription.ResetDailyQuota()
+}
+
 func (subscription *Subscription) Match(modelName string, channelId int, group string) bool {
 	// Check model restriction
 	// If models is configured (non-empty), verify the requested model is in the allowed list
